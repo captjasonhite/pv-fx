@@ -1,0 +1,25 @@
+name: update-fx
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch live rates
+        run: python3 fetch_fx.py
+      - name: Commit if changed
+        run: |
+          git config user.name "pv-fx-bot"
+          git config user.email "pv-fx-bot@users.noreply.github.com"
+          if ! git diff --quiet fx_live.js; then
+            git add fx_live.js
+            git commit -m "rates $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          else
+            echo "no change"
+          fi
